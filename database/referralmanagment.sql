@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 17, 2022 at 06:08 PM
+-- Generation Time: Apr 17, 2022 at 06:27 PM
 -- Server version: 5.7.24
 -- PHP Version: 7.2.19
 
@@ -54,7 +54,9 @@ INSERT INTO `account` (`user_id`, `income`, `credit_debit`, `code`) VALUES
 (5, '450.00', '450.00', 'c'),
 (6, '500.00', '500.00', 'c'),
 (2, '650.00', '50.00', 'c'),
-(7, '450.00', '450.00', 'c');
+(7, '450.00', '450.00', 'c'),
+(1, '430.00', '200.00', 'd'),
+(8, '500.00', '500.00', 'c');
 
 -- --------------------------------------------------------
 
@@ -106,7 +108,8 @@ INSERT INTO `user` (`id`, `fname`, `lname`, `email`, `password`, `user_referral_
 (4, 'user 4', 'user 4', 'user4@gmail.com', '123', 'Ref1427423619'),
 (5, 'user 5', 'user 5', 'user5@gmail.com', '123', 'Ref997101923'),
 (6, 'user 6', 'user 6', 'user6@gmail.com', '123', 'Ref1902578074'),
-(7, 'user 7', 'user 7', 'user7@gmail.com', '123', 'Ref1913356130');
+(7, 'user 7', 'user 7', 'user7@gmail.com', '123', 'Ref1913356130'),
+(8, 'admin', 'admin', 'admin@gmail.com', '123', 'Ref438767769');
 
 --
 -- Indexes for dumped tables
@@ -138,7 +141,7 @@ ALTER TABLE `referral_tbl`
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
