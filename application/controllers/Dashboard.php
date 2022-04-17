@@ -94,6 +94,8 @@ class Dashboard extends CI_Controller {
 		$data = array();
 		$data['title'] = 'User detail';
 		$data['user'] = $this->dashboard_model->get_data($id);
+		$data['total_debit'] = $this->dashboard_model->total_withdraw($id);
+		$data['total_credit'] = $this->dashboard_model->total_credit($id);
 		$this->load->view('common/header');
 		$this->load->view('dashboard/user_detail',$data);
 		$this->load->view('common/footer');
