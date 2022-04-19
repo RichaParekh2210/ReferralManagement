@@ -5,11 +5,9 @@
 <div>
 	<p>User Reference Code:<span><b><?php echo $user_data->user_referral_code ?></b></span></p>
 </div>
-<?php 
-	if(empty($userData)){ 
-?>
-<a href='<?php echo base_url('addIncome') ?>' class="btn btn-info add_income">Income Amount</a>
-<?php }else{  ?>
+<a href='<?php echo base_url('addIncome') ?>' class="btn btn-info add_income">Add Investment</a>
+
+<?php if(!empty($userData)){   ?>
 <a href="<?php echo base_url('debitAmount'); ?>" class='btn btn-primary'>Withdraw</a>
 <table class='table table-border'>
 	<?php if(!empty($userData)){ ?>

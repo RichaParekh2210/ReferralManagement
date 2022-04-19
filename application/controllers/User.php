@@ -13,7 +13,7 @@ class User extends CI_Controller {
 		if($this->isUserLoggedIn){
 			redirect('dashboard/account');
 		}else{
-			redirect('user/register');
+			redirect('user/registerUser');
 		}
 	}
 

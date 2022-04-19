@@ -6,7 +6,7 @@
 	{
 		
 		public function __construct(){
-			parent::__construct();
+			parent::__construct();			
 		}
 		public function register_user($userData = array()){
 			$result = $this->db->insert('user',$userData);
@@ -69,7 +69,9 @@
 			}
 		}
 		public function add_amount($id){
-			$amount = 500;
+			
+			$level_2 = (5 / 100) * 500;
+			$level_3 = (2 / 100) * 500;
 			$where = array(
 				'id ' => $id
 			);
@@ -79,121 +81,133 @@
 			$referral_user = $user->row();
 			$main_user = $referral_user->user_id;
 			$ref_user  = $referral_user->referral_user_id;
+			$account_detail = $this->get_account($ref_user);
+			$count_ref = $this->count_ref($ref_user);
 			
-			$this->db->select('COUNT(*) as main_user');
-			$this->db->where('user_id',$main_user);
+			if($count_ref->reference_count == 1){
+				$result = $this->level_1($ref_user);
+				$count_parent = $this->count_parent_ref($ref_user);
+				foreach ($count_parent as $data) {
+					$this->level_2($data->referral_user_id);
+				}
+			}elseif($count_ref->reference_count == 2){
+				$result = $this->level_2($ref_user);
+				$count_parent = $this->count_parent_ref($ref_user);
+				if($count_parent){
+					foreach ($count_parent as $data) {
+						$this->level_3($data->referral_user_id);
+					}
+				}
+			}elseif($count_ref->reference_count == 3){
+				$result = $this->level_3($ref_user);
+			}else{
+				$this->level_1($ref_user);
+			}
+		}
+		public function get_account($user_id){
+			$this->db->select('*');
+			$this->db->where('user_id',$user_id);
 			$query = $this->db->get('account');
-			$main_user_count = $query->row();
+			if($query->row()){
+				return $query->row();
+			}else{
+				return false;
+			}
+		}
+		public function count_ref($user_id){
+			$this->db->select('COUNT(referral_user_id) as reference_count');
+			$this->db->where('referral_user_id',$user_id);
+			$user = $this->db->get('referral_tbl');
+			if($user->row()){
+				return $user->row();
+			}else{
+				return false;
+			}
+		}
+		public function count_parent_ref($user_id){
+			$this->db->select('*');
+			$this->db->where('user_id',$user_id);
+			$user = $this->db->get('referral_tbl');
+			
+			if($user->result()){
+				foreach ($user->result() as $data) {
+					$this->db->select('referral_user_id,COUNT(referral_user_id) as perent_ref_count');
+					$this->db->where('referral_user_id',$data->referral_user_id);
+					$this->db->group_by('referral_user_id');
+					$this->db->having('COUNT(referral_user_id) > 0 && COUNT(referral_user_id) <= 3');
+					$user = $this->db->get('referral_tbl');
+					$parent_user_count = $user->result();
+					return $parent_user_count;
+				}
+			}else{
+				return false;
+			}
+		}
+		public function level_1($id){
+			$level_1 = (10 / 100) * 500;
+			$account_detail = $this->get_account($id);
 
-			$this->db->select('COUNT(*) as ref_user');
-			$this->db->where('user_id',$ref_user);
-			$query = $this->db->get('account');
-			$ref_user_count = $query->row();
-			$ref_amount = (10 / 100) * $amount;
-			
-			if($ref_user_count->ref_user > 0){	
-				$this->db->select('COUNT(*) as refered');
-				$this->db->where('referral_user_id',$ref_user);
-				$query = $this->db->get('referral_tbl');
-				$main_user_count = $query->row();
-				
-				if($main_user_count->refered == 1){
-					$this->db->select('*');
-					$this->db->where('user_id',$ref_user);
-					$user = $this->db->get('referral_tbl');
-					$referral_user_count = $user->result();
-					foreach ($referral_user_count as $data) {
-						$this->db->select('*');
-						$this->db->where('user_id',$data->referral_user_id);
-						$query = $this->db->get('account');
-						$data = $query->result();
-						$last_data = end($data);
-						$data = array(
-							'user_id' => $last_data->user_id,
-							'income' => $last_data->income + $ref_amount,
-							'credit_debit' => $ref_amount,
-							'code' => 'c'
-						);
-						$this->db->insert('account',$data);
-					}
-				}
-				if($main_user_count->refered == 2){
-					$ref_amount = (5 / 100) * $amount;
-					$this->db->select('*');
-					$this->db->where('user_id',$ref_user);
-					$user = $this->db->get('referral_tbl');
-					$referral_user_count = $user->result();
-					foreach ($referral_user_count as $data) {
-						$this->db->select('*');
-						$this->db->where('user_id',$data->referral_user_id);
-						$query = $this->db->get('account');
-						$data = $query->result();
-						$last_data = end($data);
-						$data = array(
-							'user_id' => $last_data->user_id,
-							'income' => $last_data->income + $ref_amount,
-							'credit_debit' => $ref_amount,
-							'code' => 'c'
-						);
-						$this->db->insert('account',$data);
-					}
-				}
-				if($main_user_count->refered == 3){
-					$ref_amount = (1 / 100) * $amount;
-					$this->db->select('*');
-					$this->db->where('user_id',$ref_user);
-					$user = $this->db->get('referral_tbl');
-					$referral_user_count = $user->result();
-					foreach ($referral_user_count as $data) {
-						$this->db->select('*');
-						$this->db->where('user_id',$data->referral_user_id);
-						$query = $this->db->get('account');
-						$data = $query->result();
-						$last_data = end($data);
-						$data = array(
-							'user_id' => $last_data->user_id,
-							'income' => $last_data->income + $ref_amount,
-							'credit_debit' => $ref_amount,
-							'code' => 'c'
-						);
-						$this->db->insert('account',$data);
-					}
-				}
-				$ref_amount = (10 / 100) * $amount;
-				$this->db->select('*');
-				$this->db->where('user_id',$ref_user);
-				$query = $this->db->get('account');
-				$data = $query->result();
-				$last_data = end($data);
+			if($account_detail){
 				$data = array(
-					'user_id' => $last_data->user_id,
-					'income' => $last_data->income + $ref_amount,
-					'credit_debit' => $ref_amount,
+					'user_id' => $account_detail->user_id,
+					'income' => $account_detail->income + $level_1,
+					'credit_debit' => $level_1,
+					'code' => 'c'
+				);
+				$this->db->insert('account',$data);
+			}else{
+				$data = array(
+					'user_id' => $id,
+					'income' => $level_1,
+					'credit_debit' => $level_1,
 					'code' => 'c'
 				);
 				$this->db->insert('account',$data);
 			}
-			if($main_user){	
-				$this->db->select('*');
-				$this->db->where('user_id',$main_user);
-				$query = $this->db->get('account');
-				$data = $query->row();
-				if($main_user_count->main_user > 0){
-					$main_user_amt = $data->income + ($amount - $ref_amount);
-					$data = array(
-						'user_id' => $data->user_id,
-						'income' => $main_user_amt,
-						'credit_debit' => $main_user_amt,
-						'code' => 'c'
-					);
-				}else{
-					$data = array(
-						'user_id' => $main_user,
-						'income' => $amount - $ref_amount,
-						'credit_debit' => $amount - $ref_amount,
-						'code' => 'c'
-					);
-				}
+			return true;
+		}
+		public function level_2($id){
+			$level_1 = (5 / 100) * 500;
+			$account_detail = $this->get_account($id);
+
+			if($account_detail){
+				$data = array(
+					'user_id' => $account_detail->user_id,
+					'income' => $account_detail->income + $level_1,
+					'credit_debit' => $level_1,
+					'code' => 'c'
+				);
+				$this->db->insert('account',$data);
+			}else{
+				$data = array(
+					'user_id' => $id,
+					'income' => $level_1,
+					'credit_debit' => $level_1,
+					'code' => 'c'
+				);
+				$this->db->insert('account',$data);
+			}
+			return true;
+		}
+		public function level_3($id){
+			$level_1 = (1 / 100) * 500;
+			$account_detail = $this->get_account($id);
+
+			if($account_detail){
+				$data = array(
+					'user_id' => $account_detail->user_id,
+					'income' => $account_detail->income + $level_1,
+					'credit_debit' => $level_1,
+					'code' => 'c'
+				);
+				$this->db->insert('account',$data);
+			}else{
+				$data = array(
+					'user_id' => $id,
+					'income' => $level_1,
+					'credit_debit' => $level_1,
+					'code' => 'c'
+				);
 				$this->db->insert('account',$data);
 			}
 			return true;
